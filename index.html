@@ -80,16 +80,20 @@
     .targetLabel{position:absolute; top:10px; left:12px; font-size:12px; color: rgba(0,0,0,0.45)}
     .yourLabel{position:absolute; top:10px; right:12px; font-size:12px; color: rgba(0,0,0,0.45)}
 
-    .targetHeart{width:140px; height:140px; position:absolute; left:50%; top:50%; transform: translate(-50%,-50%) scale(var(--ts, 1));}
+    .targetHeart{width:140px; height:140px; position:absolute; left:50%; top:50%; transform: translate(-50%,-50%);}
     .targetHeart::before{
       content:'';
       position:absolute;
-      inset:0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M23.6 0c-2.8 0-5.2 1.6-6.6 3.9C15.6 1.6 13.2 0 10.4 0 4.7 0 0 4.7 0 10.4c0 9.4 16.1 18.6 16.1 18.6S32 19.8 32 10.4C32 4.7 27.3 0 23.6 0z' fill='none' stroke='%231f66e3' stroke-opacity='0.45' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      left:50%;
+      top:50%;
+      width:26px;
+      height:26px;
+      transform: translate(-50%,-50%) scale(var(--ts, 1));
+      transition: transform 90ms linear;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M23.6 0c-2.8 0-5.2 1.6-6.6 3.9C15.6 1.6 13.2 0 10.4 0 4.7 0 0 4.7 0 10.4c0 9.4 16.1 18.6 16.1 18.6S32 19.8 32 10.4C32 4.7 27.3 0 23.6 0z' fill='none' stroke='%231f66e3' stroke-opacity='0.55' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
       background-repeat:no-repeat;
       background-size:contain;
       background-position:center;
-      filter: drop-shadow(0 10px 16px rgba(0,0,0,0.06));
     }
 
     .aimHeart{width:140px; height:140px; position:absolute; left:50%; top:50%; transform: translate(-50%,-50%);}
@@ -740,11 +744,11 @@
       let targetScale = 1.0;
       let starScale = 1.0;
 
-      const MIN_TARGET = 0.85;
-      const MAX_TARGET = 1.55;
-      const MIN_STAR = 0.25;   // start very small from the center
-      const MAX_STAR = 2.35;   // can grow bigger than the target
-      const CHARGE_MS = 1700; // time to reach max
+      const MIN_TARGET = 0.80;
+      const MAX_TARGET = 1.75;
+      const MIN_STAR = 0.20;   // start very small from the center
+      const MAX_STAR = 2.80;   // can grow bigger than the target
+      const CHARGE_MS = 1650; // time to reach max
 
       const setTarget = () => {
         targetScale = MIN_TARGET + Math.random() * (MAX_TARGET - MIN_TARGET);

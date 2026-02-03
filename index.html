@@ -193,6 +193,7 @@
       <div class="btns">
         <button class="btn" id="btnNew">换一句</button>
         <button class="btn" id="btnDaily">今日签到 +7</button>
+        <button class="btn" id="btnReset">重置数据（调试）</button>
       </div>
     </div>
 
@@ -614,18 +615,26 @@
       toast('签到成功：+7 心心！');
     };
 
-    const resetLocal = () => {
-      if (!confirm('要清空本地分数和贴纸吗？（只影响你当前设备）')) return;
+    const resetAll = () => {
+      if (!confirm('要重置所有本地数据吗？（登录态/积分/次数/贴纸都会清空，仅当前设备）')) return;
       state.score = 0;
       state.unlocked = {};
       state.dailyBonusTaken = false;
+      hgRun = null;
+      activeHeartXs.splice(0, activeHeartXs.length);
       try {
+        localStorage.removeItem('theo_gate_ok');
         localStorage.removeItem('theo_score');
         localStorage.removeItem('theo_unlocked');
         localStorage.removeItem('theo_daily_bonus_day');
+        localStorage.removeItem('theo_heartgame_plays');
+        localStorage.removeItem(`${todayKey()}_heartgame_points`);
       } catch {}
       render();
-      toast('已清空，本地重新开始～');
+      renderHg();
+      toast('已重置～');
+      // optional: reload to ensure clean UI state
+      setTimeout(() => location.reload(), 300);
     };
 
     // gate
@@ -641,6 +650,7 @@
       $('btnNew').onclick = pickGreeting;
       $('btnStart2').onclick = startMiniGame;
       $('btnDaily').onclick = dailyBonus;
+      $('btnReset').onclick = resetAll;
 
       // refresh remaining plays every ~10s (hour window)
       setInterval(renderHg, 10000);

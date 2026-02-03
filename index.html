@@ -103,7 +103,20 @@
       mask-position: center;
     }
     .heart.hit{ --hs: 1.22; }
-    @keyframes floatUp{0%{transform: translate(-50%,0) scale(1); opacity:1;} 100%{transform: translate(-50%,-260px) scale(1.08); opacity:0;}}
+    @keyframes floatUp{0%{transform: translate(-50%,0) scale(1); opacity:1;} 100%{transform: translate(-50%,-320px) scale(1.08); opacity:0;}}
+
+    /* heart-game score ping */
+    .hgBar{margin-top:14px; padding:14px; border-radius:18px; border:1px solid rgba(0,0,0,0.06); background: rgba(255,255,255,0.72);
+      display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+    .hgLeft{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;}
+    .hgLabel{font-size:12px; color:rgba(0,0,0,0.55)}
+    .hgValue{font-size:22px; font-weight:950; color:rgba(0,0,0,0.82)}
+    .hgMeta{font-size:12px; color:rgba(0,0,0,0.45)}
+    .hgBeat{display:inline-block; transform-origin:center;}
+    .hgBeat.ping1{animation: beat1 260ms ease-out;}
+    .hgBeat.ping5{animation: beat5 460ms cubic-bezier(.2,1.3,.2,1);}
+    @keyframes beat1{0%{transform: scale(1);} 45%{transform: scale(1.16);} 100%{transform: scale(1);} }
+    @keyframes beat5{0%{transform: scale(1);} 35%{transform: scale(1.38);} 70%{transform: scale(1.14);} 100%{transform: scale(1);} }
     .rewards{margin-top:16px;}
     .rewardsTitle{font-weight:900; color:rgba(0,0,0,0.78)}
     .grid{margin-top:10px; display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:10px;}
@@ -177,7 +190,16 @@
 
     <div class="game">
       <div class="gameTitle">小游戏 1：收集小心心（点一下 +1）</div>
-      <div class="gameDesc">点到心心就 +1。达到 10/30/60 会解锁奖励贴纸～</div>
+      <div class="gameDesc">每小时可玩 5 次。每击中一个 +1；如果这一局全部击中，额外 +5，并送你一句甜甜的提示。</div>
+
+      <div class="hgBar">
+        <div class="hgLeft">
+          <div class="hgLabel">今日小心心积分</div>
+          <div class="hgValue"><span class="hgBeat" id="hgPoints">0</span></div>
+          <div class="hgMeta" id="hgMeta">本小时剩余 5 次</div>
+        </div>
+      </div>
+
       <div class="board" id="board"><div class="hint">点「开始收集心心」后，小心心会飘出来</div></div>
       <div class="btns" style="margin-top:12px">
         <button class="btn primary" id="btnStart2">开始收集心心</button>
@@ -330,23 +352,78 @@
     // avoid overlapping too much by spacing X positions
     const activeHeartXs = []; // { id, x }
     const blueColors = [
-      '#0b1b5e', // deep navy
-      '#123b8a',
-      '#1e5abf',
-      '#2a79ff',
-      '#5aa7ff',
-      '#9fd1ff', // light blue
+      '#061a5f', // deep navy
+      '#0b2a78',
+      '#1442a6',
+      '#1f66e3',
+      '#4d9bff',
+      '#a7dbff', // light blue
     ];
 
+    // Heart-game daily points + hourly play limit
+    const hgPointsEl = () => $('hgPoints');
+    const hgMetaEl = () => $('hgMeta');
+
+    const hgDayKey = () => `${todayKey()}_heartgame_points`;
+    const hgPlaysKey = () => 'theo_heartgame_plays'; // array of timestamps
+
+    const getHgPoints = () => {
+      try { return Number(localStorage.getItem(hgDayKey()) || '0') || 0; } catch { return 0; }
+    };
+    const setHgPoints = (v) => {
+      try { localStorage.setItem(hgDayKey(), String(v)); } catch {}
+    };
+
+    const getRecentPlays = () => {
+      const now = Date.now();
+      try {
+        const arr = JSON.parse(localStorage.getItem(hgPlaysKey()) || '[]');
+        const cleaned = Array.isArray(arr) ? arr.filter(t => typeof t === 'number' && now - t < 60*60*1000) : [];
+        localStorage.setItem(hgPlaysKey(), JSON.stringify(cleaned));
+        return cleaned;
+      } catch {
+        return [];
+      }
+    };
+
+    const remainingPlays = () => {
+      const used = getRecentPlays().length;
+      return Math.max(0, 5 - used);
+    };
+
+    const recordPlay = () => {
+      const arr = getRecentPlays();
+      arr.push(Date.now());
+      try { localStorage.setItem(hgPlaysKey(), JSON.stringify(arr)); } catch {}
+    };
+
+    const pingHg = (kind /* 1|5 */) => {
+      const el = hgPointsEl();
+      if (!el) return;
+      el.classList.remove('ping1','ping5');
+      // force reflow
+      void el.offsetWidth;
+      el.classList.add(kind === 5 ? 'ping5' : 'ping1');
+    };
+
+    const renderHg = () => {
+      const pts = getHgPoints();
+      if (hgPointsEl()) hgPointsEl().textContent = String(pts);
+      if (hgMetaEl()) hgMetaEl().textContent = `本小时剩余 ${remainingPlays()} 次`;
+    };
+
     const pickX = () => {
-      const minDist = 10; // percentage points
-      for (let tries = 0; tries < 20; tries++) {
+      const minDist = 12; // percentage points
+      for (let tries = 0; tries < 24; tries++) {
         const x = Math.random() * 90 + 5;
         const ok = activeHeartXs.every(h => Math.abs(h.x - x) >= minDist);
         if (ok) return x;
       }
       return Math.random() * 90 + 5;
     };
+
+    // current heart-game run state
+    let hgRun = null; // { total, remaining, missed }
 
     const spawnHeart = () => {
       const board = $('board');
@@ -356,7 +433,7 @@
       heart.setAttribute('aria-label', 'heart');
 
       const x = pickX();
-      const dur = 2700 + Math.random() * 2400;
+      const dur = 1900 + Math.random() * 1300; // faster float
       heart.style.left = `${x}%`;
       heart.style.animationDuration = `${dur}ms`;
       heart.style.setProperty('--hc', blueColors[Math.floor(Math.random() * blueColors.length)]);
@@ -407,11 +484,38 @@
         done = true;
         heart.classList.add('hit');
         burst(heart);
+
+        // +1
         state.score += 1;
+        const pts = getHgPoints() + 1;
+        setHgPoints(pts);
+        pingHg(1);
+        renderHg();
+
         maybeUnlock();
         save();
         render();
         toast('+1 心心');
+
+        if (hgRun) {
+          hgRun.remaining -= 1;
+          if (hgRun.remaining <= 0) {
+            // run finished
+            if (!hgRun.missed) {
+              // perfect bonus
+              state.score += 5;
+              setHgPoints(getHgPoints() + 5);
+              pingHg(5);
+              renderHg();
+              maybeUnlock();
+              save();
+              render();
+              toast('全部击中！额外 +5 ❤ Theo，你真的超厉害～ - Evie');
+            }
+            hgRun = null;
+          }
+        }
+
         setTimeout(() => { removeFromActive(); heart.remove(); }, 140);
       };
 
@@ -426,7 +530,14 @@
       });
 
       board.appendChild(heart);
-      setTimeout(() => { if (heart.isConnected) { 
+      setTimeout(() => { if (heart.isConnected) {
+        // missed this heart
+        if (hgRun) {
+          hgRun.missed = true;
+          hgRun.remaining -= 1;
+          if (hgRun.remaining <= 0) hgRun = null;
+        }
+
         const idx = activeHeartXs.findIndex(h => h.id === heart.dataset.hid);
         if (idx >= 0) activeHeartXs.splice(idx, 1);
         heart.remove();
@@ -434,9 +545,20 @@
     };
 
     const startMiniGame = () => {
+      const left = remainingPlays();
+      renderHg();
+      if (left <= 0) {
+        toast('Theo～这一小时已经玩满 5 次啦，休息一下，下一小时再来 ❤ — Evie');
+        return;
+      }
+
+      recordPlay();
+      renderHg();
+
       toast('开始收集心心～点小心心加分！');
-      const count = 10; // fewer hearts for mobile comfort
-      for (let i=0;i<count;i++) setTimeout(spawnHeart, i*260);
+      const count = 10; // one run hearts
+      hgRun = { total: count, remaining: count, missed: false };
+      for (let i=0;i<count;i++) setTimeout(spawnHeart, i*220);
     };
 
     const dailyBonus = () => {
@@ -472,10 +594,14 @@
       pickGreeting();
       maybeUnlock();
       render();
+      renderHg();
 
       $('btnNew').onclick = pickGreeting;
       $('btnStart2').onclick = startMiniGame;
       $('btnDaily').onclick = dailyBonus;
+
+      // refresh remaining plays every ~10s (hour window)
+      setInterval(renderHg, 10000);
 
       // Mini game 2: press-and-hold charge
       const chargeBtn = $('chargeBtn');

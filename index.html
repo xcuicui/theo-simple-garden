@@ -302,26 +302,47 @@
       toast._timer = setTimeout(() => t.style.display = 'none', 1800);
     };
 
-    const centerMsg = (html, ms = 2200) => {
+    const hideCenterMsg = () => {
       const wrap = $('centerMsg');
       const card = $('centerCard');
       if (!wrap || !card) return;
-      card.innerHTML = html;
-      wrap.style.display = 'grid';
-      clearTimeout(centerMsg._timer);
-      centerMsg._timer = setTimeout(() => {
-        wrap.style.display = 'none';
-        card.innerHTML = '';
-      }, ms);
+      wrap.style.display = 'none';
+      card.innerHTML = '';
     };
-    // allow tap to dismiss
-    document.addEventListener('click', (e) => {
+
+    const centerMsg = (html, opts = {}) => {
       const wrap = $('centerMsg');
-      if (wrap && wrap.style.display !== 'none') {
-        wrap.style.display = 'none';
-        $('centerCard').innerHTML = '';
+      const card = $('centerCard');
+      if (!wrap || !card) return;
+
+      const { delayMs = 0, autoHideMs = null, buttonText = '我知道了(✋ˇ-ˇ)' } = opts;
+
+      clearTimeout(centerMsg._timer);
+
+      const show = () => {
+        card.innerHTML = html +
+          `<div style="margin-top:14px; display:flex; justify-content:center;">
+             <button class="btn" id="centerOkBtn">${buttonText}</button>
+           </div>`;
+        wrap.style.display = 'grid';
+
+        // bind close button
+        setTimeout(() => {
+          const b = document.getElementById('centerOkBtn');
+          if (b) b.onclick = (e) => { e.preventDefault(); hideCenterMsg(); };
+        }, 0);
+
+        if (autoHideMs && autoHideMs > 0) {
+          centerMsg._timer = setTimeout(hideCenterMsg, autoHideMs);
+        }
+      };
+
+      if (delayMs && delayMs > 0) {
+        centerMsg._timer = setTimeout(show, delayMs);
+      } else {
+        show();
       }
-    }, { capture: true });
+    };
 
     const todayKey = () => {
       const d = new Date();
@@ -551,7 +572,7 @@
               centerMsg(
                 `Theo 超棒，10 个小心心全部击中，额外加 5 分～(╹◡╹)～` +
                 `<span class="centerSign">— Evie</span>`,
-                2600
+                { delayMs: 200, autoHideMs: null, buttonText: '我知道了(✋ˇ-ˇ)' }
               );
             }
             hgRun = null;

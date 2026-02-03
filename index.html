@@ -80,7 +80,7 @@
     .targetLabel{position:absolute; top:10px; left:12px; font-size:12px; color: rgba(0,0,0,0.45)}
     .yourLabel{position:absolute; top:10px; right:12px; font-size:12px; color: rgba(0,0,0,0.45)}
 
-    .targetHeart{width:140px; height:140px; position:absolute; left:50%; top:50%; transform: translate(-50%,-50%) scale(1);}
+    .targetHeart{width:140px; height:140px; position:absolute; left:50%; top:50%; transform: translate(-50%,-50%) scale(var(--ts, 1));}
     .targetHeart::before{
       content:'';
       position:absolute;
@@ -749,8 +749,7 @@
       const setTarget = () => {
         targetScale = MIN_TARGET + Math.random() * (MAX_TARGET - MIN_TARGET);
         if (targetHeart) {
-          targetHeart.style.transform = `scale(${targetScale})`;
-          targetHeart.style.transition = 'transform 180ms ease';
+          targetHeart.style.setProperty('--ts', String(targetScale));
         }
       };
 

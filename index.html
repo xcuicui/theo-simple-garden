@@ -14,6 +14,8 @@
         radial-gradient(1000px 600px at 85% 25%, #e7f3ff, transparent 55%),
         radial-gradient(900px 700px at 50% 92%, #fff6d6, transparent 60%),
         #fff;
+      /* Reduce accidental double-tap zoom on interactive elements */
+      touch-action: manipulation;
     }
     .card{
       width:min(860px, calc(100% - 32px));
@@ -38,6 +40,9 @@
       border:0; border-radius:999px; padding:10px 14px; font-size:14px; cursor:pointer;
       background: rgba(255,255,255,0.8);
       box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
     .btn.primary{background: linear-gradient(135deg, #ff8fc2, #7cc7ff); color:#fff; font-weight:800;}
     .btn:hover{transform: translateY(-1px)}
@@ -56,7 +61,11 @@
     }
     .hint{position:absolute; inset:0; display:grid; place-items:center; font-size:13px; color:rgba(0,0,0,0.45); pointer-events:none;}
     .heart{position:absolute; bottom:-22px; width:40px; height:40px; border:0; cursor:pointer; background:transparent;
-      animation-name: floatUp; animation-timing-function:ease-in; animation-fill-mode:forwards;}
+      animation-name: floatUp; animation-timing-function:ease-in; animation-fill-mode:forwards;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
     .heart::before{content:'❤'; font-size:34px; filter: drop-shadow(0 12px 16px rgba(0,0,0,0.12)); color:#ff5aa8;}
     .heart:nth-child(3n)::before{color:#ff7bbd;} .heart:nth-child(4n)::before{color:#ff4d8f;} .heart:nth-child(5n)::before{color:#ff95c7;}
     @keyframes floatUp{0%{transform: translate(-50%,0) scale(1); opacity:1;} 100%{transform: translate(-50%,-260px) scale(1.08); opacity:0;}}
@@ -115,11 +124,22 @@
     </div>
 
     <div class="game">
-      <div class="gameTitle">小游戏：收集小心心</div>
+      <div class="gameTitle">小游戏 1：收集小心心（点一下 +1）</div>
       <div class="gameDesc">点到心心就 +1。达到 10/30/60 会解锁奖励贴纸～</div>
       <div class="board" id="board"><div class="hint">点「开始收集心心」后，小心心会飘出来</div></div>
       <div class="btns" style="margin-top:12px">
         <button class="btn primary" id="btnStart2">开始收集心心</button>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="gameTitle">小游戏 2：长按充能（松手得分）</div>
+      <div class="gameDesc">按住“充能心心”会变亮，松手就把能量变成分数。更适合手机，不怕双击放大。</div>
+      <div class="board" id="chargeBoard">
+        <div class="hint" id="chargeHint">按住下面的心心开始充能</div>
+      </div>
+      <div class="btns" style="margin-top:12px">
+        <button class="btn primary" id="chargeBtn" aria-label="charge">按住充能心心 ❤</button>
       </div>
     </div>
 
@@ -264,6 +284,10 @@
       const dur = 2600 + Math.random() * 2200;
       heart.style.left = `${x}%`;
       heart.style.animationDuration = `${dur}ms`;
+
+      // Prevent iOS double-tap zoom / selection quirks
+      heart.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
+
       heart.onclick = () => {
         heart.remove();
         state.score += 1;
@@ -319,6 +343,71 @@
       $('btnStart2').onclick = startMiniGame;
       $('btnDaily').onclick = dailyBonus;
       $('btnReset').onclick = resetLocal;
+
+      // Mini game 2: press-and-hold charge
+      const chargeBtn = $('chargeBtn');
+      const chargeHint = $('chargeHint');
+      let charging = false;
+      let charge = 0;
+      let chargeTimer = null;
+
+      const renderCharge = () => {
+        const pct = Math.max(0, Math.min(100, charge));
+        // visualize by button background
+        chargeBtn.style.background = `linear-gradient(135deg, rgba(255,143,194,${0.35 + 0.55*(pct/100)}), rgba(124,199,255,${0.25 + 0.55*(pct/100)}))`;
+        chargeBtn.style.color = '#fff';
+        chargeBtn.style.fontWeight = '900';
+        chargeHint.textContent = charging
+          ? `充能中… ${pct}%（松手得分）`
+          : `按住开始充能（上次充能：${pct}%）`;
+      };
+
+      const stopCharge = () => {
+        if (!charging) return;
+        charging = false;
+        if (chargeTimer) clearInterval(chargeTimer);
+        chargeTimer = null;
+
+        // score: 0..10 based on charge
+        const gained = Math.max(1, Math.floor(charge / 10));
+        state.score += gained;
+        maybeUnlock();
+        save();
+        render();
+        toast(`松手！+${gained} 心心`);
+        renderCharge();
+      };
+
+      const startCharge = () => {
+        charging = true;
+        charge = 0;
+        renderCharge();
+        chargeTimer = setInterval(() => {
+          if (!charging) return;
+          charge = Math.min(100, charge + 4);
+          renderCharge();
+          if (charge >= 100) {
+            // auto stop at full
+            stopCharge();
+          }
+        }, 60);
+      };
+
+      // Use pointer events for best mobile compatibility
+      chargeBtn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        if (charging) return;
+        chargeBtn.setPointerCapture?.(e.pointerId);
+        startCharge();
+      });
+      chargeBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopCharge(); });
+      chargeBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopCharge(); });
+      chargeBtn.addEventListener('pointerleave', () => { /* allow leaving without stopping */ });
+
+      // Also prevent double-tap zoom on this control
+      chargeBtn.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
+
+      renderCharge();
     };
 
     const showGate = () => {

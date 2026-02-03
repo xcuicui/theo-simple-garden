@@ -99,6 +99,25 @@
       background: rgba(0,0,0,0.78); color:#fff; font-size:13px; box-shadow: 0 18px 50px rgba(0,0,0,0.20);
       max-width: calc(100% - 26px); text-align:center; display:none;}
 
+    /* burst effect */
+    .spark{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      pointer-events:none;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.2) 35%, rgba(255,255,255,0) 70%),
+                  linear-gradient(135deg, rgba(255,143,194,1), rgba(124,199,255,1));
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,0.12));
+      transform: translate(-50%, -50%);
+      animation: sparkOut 520ms ease-out forwards;
+    }
+    @keyframes sparkOut{
+      0%{ opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+      12%{ opacity: 1; }
+      100%{ opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.25); }
+    }
+
     /* “very simple password gate” overlay */
     .gate{position:fixed; inset:0; display:grid; place-items:center; background: rgba(255,255,255,0.55); backdrop-filter: blur(10px);}
     .gateCard{width:min(520px, calc(100% - 32px)); border-radius:22px; background: rgba(255,255,255,0.88);
@@ -304,11 +323,37 @@
       // Prevent iOS double-tap zoom / selection quirks
       heart.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
 
+      const burst = (el) => {
+        const boardRect = board.getBoundingClientRect();
+        const r = el.getBoundingClientRect();
+        const cx = r.left - boardRect.left + r.width / 2;
+        const cy = r.top - boardRect.top + r.height / 2;
+
+        // sparks
+        const n = 10;
+        for (let i = 0; i < n; i++) {
+          const s = document.createElement('div');
+          s.className = 'spark';
+          s.style.left = `${cx}px`;
+          s.style.top = `${cy}px`;
+          const ang = (Math.PI * 2 * i) / n + (Math.random() * 0.25);
+          const dist = 48 + Math.random() * 22;
+          const dx = Math.cos(ang) * dist;
+          const dy = Math.sin(ang) * dist;
+          s.style.setProperty('--dx', `${dx}px`);
+          s.style.setProperty('--dy', `${dy}px`);
+          s.style.animationDelay = `${Math.random() * 40}ms`;
+          board.appendChild(s);
+          setTimeout(() => s.remove(), 700);
+        }
+      };
+
       let done = false;
       const hit = () => {
         if (done) return;
         done = true;
         heart.classList.add('hit');
+        burst(heart);
         state.score += 1;
         maybeUnlock();
         save();
@@ -333,7 +378,8 @@
 
     const startMiniGame = () => {
       toast('开始收集心心～点小心心加分！');
-      for (let i=0;i<18;i++) setTimeout(spawnHeart, i*180);
+      const count = 10; // fewer hearts for mobile comfort
+      for (let i=0;i<count;i++) setTimeout(spawnHeart, i*260);
     };
 
     const dailyBonus = () => {

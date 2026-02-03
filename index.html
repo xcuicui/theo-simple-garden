@@ -80,9 +80,29 @@
       transition: opacity 120ms ease, transform 120ms ease;
     }
     .heart:active::after{ opacity: 0.9; transform: scale(1.02); }
-    .heart.hit{ animation: pop 160ms ease-out forwards; }
-    @keyframes pop { from { transform: translate(-50%, 0) scale(1); } to { transform: translate(-50%, 0) scale(1.18); } }
-    .heart::before{content:'❤'; font-size:30px; filter: drop-shadow(0 10px 14px rgba(0,0,0,0.12)); color: var(--hc, #ff5aa8); position:absolute; left:50%; top:50%; transform: translate(-50%, -50%);}
+    /* keep floatUp animation; hit effect is handled by scaling the SVG heart mask */
+    .heart::before{
+      content:'';
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:30px;
+      height:30px;
+      transform: translate(-50%, -50%) scale(var(--hs, 1));
+      transition: transform 140ms ease;
+      background: var(--hc, #2a79ff);
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,0.12));
+      /* SVG mask heart so color works consistently on mobile (no emoji rendering) */
+      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M23.6 0c-2.8 0-5.2 1.6-6.6 3.9C15.6 1.6 13.2 0 10.4 0 4.7 0 0 4.7 0 10.4c0 9.4 16.1 18.6 16.1 18.6S32 19.8 32 10.4C32 4.7 27.3 0 23.6 0z'/%3E%3C/svg%3E");
+      -webkit-mask-repeat: no-repeat;
+      -webkit-mask-size: contain;
+      -webkit-mask-position: center;
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M23.6 0c-2.8 0-5.2 1.6-6.6 3.9C15.6 1.6 13.2 0 10.4 0 4.7 0 0 4.7 0 10.4c0 9.4 16.1 18.6 16.1 18.6S32 19.8 32 10.4C32 4.7 27.3 0 23.6 0z'/%3E%3C/svg%3E");
+      mask-repeat: no-repeat;
+      mask-size: contain;
+      mask-position: center;
+    }
+    .heart.hit{ --hs: 1.22; }
     @keyframes floatUp{0%{transform: translate(-50%,0) scale(1); opacity:1;} 100%{transform: translate(-50%,-260px) scale(1.08); opacity:0;}}
     .rewards{margin-top:16px;}
     .rewardsTitle{font-weight:900; color:rgba(0,0,0,0.78)}
@@ -309,13 +329,13 @@
 
     // avoid overlapping too much by spacing X positions
     const activeHeartXs = []; // { id, x }
-    const romanticColors = [
-      '#ff4d8f', // rose
-      '#ff77b7', // blush
-      '#ff5aa8', // pink
-      '#c06cff', // lavender
-      '#ff6bd6', // magenta
-      '#ff6f61', // coral
+    const blueColors = [
+      '#0b1b5e', // deep navy
+      '#123b8a',
+      '#1e5abf',
+      '#2a79ff',
+      '#5aa7ff',
+      '#9fd1ff', // light blue
     ];
 
     const pickX = () => {
@@ -339,7 +359,7 @@
       const dur = 2700 + Math.random() * 2400;
       heart.style.left = `${x}%`;
       heart.style.animationDuration = `${dur}ms`;
-      heart.style.setProperty('--hc', romanticColors[Math.floor(Math.random() * romanticColors.length)]);
+      heart.style.setProperty('--hc', blueColors[Math.floor(Math.random() * blueColors.length)]);
 
       const id = Math.random().toString(36).slice(2);
       heart.dataset.hid = id;

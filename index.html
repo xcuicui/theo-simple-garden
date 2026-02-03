@@ -59,7 +59,49 @@
                   rgba(255,255,255,0.55);
       border: 1px dashed rgba(0,0,0,0.12);
     }
-    .hint{position:absolute; inset:0; display:grid; place-items:center; font-size:13px; color:rgba(0,0,0,0.45); pointer-events:none;}
+    .hint{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:10px;
+      display:grid;
+      place-items:center;
+      font-size:13px;
+      color:rgba(0,0,0,0.45);
+      pointer-events:none;
+      padding:0 12px;
+      text-align:center;
+    }
+
+    /* charge game */
+    .chargeStage{position:absolute; inset:10px 10px 40px 10px; display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:center;}
+    .targetWrap,.aimWrap{height:100%; border-radius:18px; border:1px solid rgba(0,0,0,0.06); background: rgba(255,255,255,0.55);
+      display:grid; place-items:center; position:relative; overflow:hidden;}
+    .targetLabel{position:absolute; top:10px; left:12px; font-size:12px; color: rgba(0,0,0,0.45)}
+    .targetHeart{width:110px; height:110px; position:relative;}
+    .targetHeart::before{
+      content:''; position:absolute; inset:0;
+      background: transparent;
+      border: 2px dashed rgba(31,102,227,0.35);
+      border-radius: 999px;
+      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M23.6 0c-2.8 0-5.2 1.6-6.6 3.9C15.6 1.6 13.2 0 10.4 0 4.7 0 0 4.7 0 10.4c0 9.4 16.1 18.6 16.1 18.6S32 19.8 32 10.4C32 4.7 27.3 0 23.6 0z'/%3E%3C/svg%3E");
+      -webkit-mask-repeat:no-repeat; -webkit-mask-size:contain; -webkit-mask-position:center;
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M23.6 0c-2.8 0-5.2 1.6-6.6 3.9C15.6 1.6 13.2 0 10.4 0 4.7 0 0 4.7 0 10.4c0 9.4 16.1 18.6 16.1 18.6S32 19.8 32 10.4C32 4.7 27.3 0 23.6 0z'/%3E%3C/svg%3E");
+      mask-repeat:no-repeat; mask-size:contain; mask-position:center;
+    }
+    .aimStar{width:110px; height:110px; position:relative;}
+    .aimStar::before{
+      content:''; position:absolute; left:50%; top:50%;
+      width:18px; height:18px;
+      transform: translate(-50%,-50%) scale(var(--ss, 1));
+      transition: transform 60ms linear;
+      background: linear-gradient(135deg, rgba(31,102,227,1), rgba(167,219,255,1));
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,0.12));
+      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/%3E%3C/svg%3E");
+      -webkit-mask-repeat:no-repeat; -webkit-mask-size:contain; -webkit-mask-position:center;
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/%3E%3C/svg%3E");
+      mask-repeat:no-repeat; mask-size:contain; mask-position:center;
+    }
     .heart{position:absolute; bottom:-22px; width:42px; height:42px; border:0; cursor:pointer; background:transparent;
       animation-name: floatUp; animation-timing-function:ease-in; animation-fill-mode:forwards;
       touch-action: manipulation;
@@ -221,13 +263,23 @@
 
       <div style="height:12px"></div>
 
-      <div class="gameTitle">小游戏 2：长按充能（松手得分）</div>
-      <div class="gameDesc">按住"充能心心"会变亮，松手就把能量变成分数。更适合手机，不怕双击放大。</div>
+      <div class="gameTitle">小游戏 2：对准目标（长按充能）</div>
+      <div class="gameDesc">每次会出现一个随机大小的“目标心心”。按住按钮让小星星长大，松手时星星越接近目标大小，得分越高（0～9）。</div>
       <div class="board" id="chargeBoard">
-        <div class="hint" id="chargeHint">按住下面的心心开始充能</div>
+        <div class="chargeStage">
+          <div class="targetWrap">
+            <div class="targetLabel">目标</div>
+            <div class="targetHeart" id="targetHeart"></div>
+          </div>
+          <div class="aimWrap">
+            <div class="targetLabel">你的星星</div>
+            <div class="aimStar" id="aimStar"></div>
+          </div>
+        </div>
+        <div class="hint" id="chargeHint">按住下面按钮开始充能，松手结算</div>
       </div>
       <div class="btns" style="margin-top:12px">
-        <button class="btn primary" id="chargeBtn" aria-label="charge">按住充能心心 ❤</button>
+        <button class="btn primary" id="chargeBtn" aria-label="charge">按住充能 ⭐</button>
       </div>
     </div>
 
@@ -571,7 +623,7 @@
               render();
               centerMsg(
                 `Theo 超棒，10 个小心心全部击中，额外加 5 分～(╹◡╹)～` +
-                `<span class="centerSign">— Evie</span>`,
+                `<span class="centerSign">- Evie</span>`,
                 { delayMs: 200, autoHideMs: null, buttonText: '我知道了(✋ˇ-ˇ)' }
               );
             }
@@ -675,56 +727,94 @@
       // refresh remaining plays every ~10s (hour window)
       setInterval(renderHg, 10000);
 
-      // Mini game 2: press-and-hold charge
+      // Mini game 2: match the target heart size by charging a star (0..9)
       const chargeBtn = $('chargeBtn');
       const chargeHint = $('chargeHint');
-      let charging = false;
-      let charge = 0;
-      let chargeTimer = null;
+      const targetHeart = $('targetHeart');
+      const aimStar = $('aimStar');
 
-      const renderCharge = () => {
-        const pct = Math.max(0, Math.min(100, charge));
-        // visualize by button background
-        chargeBtn.style.background = `linear-gradient(135deg, rgba(255,143,194,${0.35 + 0.55*(pct/100)}), rgba(124,199,255,${0.25 + 0.55*(pct/100)}))`;
-        chargeBtn.style.color = '#fff';
-        chargeBtn.style.fontWeight = '900';
+      let charging = false;
+      let raf = null;
+      let startAt = 0;
+      let targetScale = 1.0;
+      let starScale = 1.0;
+
+      const MIN_TARGET = 0.75;
+      const MAX_TARGET = 1.55;
+      const MIN_STAR = 0.55;
+      const MAX_STAR = 1.85;
+      const CHARGE_MS = 1600; // time to reach max
+
+      const setTarget = () => {
+        targetScale = MIN_TARGET + Math.random() * (MAX_TARGET - MIN_TARGET);
+        if (targetHeart) {
+          targetHeart.style.transform = `scale(${targetScale})`;
+          targetHeart.style.transition = 'transform 180ms ease';
+        }
+      };
+
+      const setStar = (s) => {
+        starScale = Math.max(MIN_STAR, Math.min(MAX_STAR, s));
+        if (aimStar) aimStar.style.setProperty('--ss', String(starScale));
+      };
+
+      const renderChargeHint = (extra = '') => {
+        if (!chargeHint) return;
         chargeHint.textContent = charging
-          ? `充能中… ${pct}%（松手得分）`
-          : `按住开始充能（上次充能：${pct}%）`;
+          ? '充能中…松手结算（0～9 分）'
+          : (extra || '按住开始充能，松手结算（0～9 分）');
+      };
+
+      const scoreByCloseness = (s, t) => {
+        const rel = Math.abs(s - t) / t; // 0 is perfect
+        // map to 0..9 (smaller rel => higher score)
+        const sc = Math.round(9 - rel * 18);
+        return Math.max(0, Math.min(9, sc));
       };
 
       const stopCharge = () => {
         if (!charging) return;
         charging = false;
-        if (chargeTimer) clearInterval(chargeTimer);
-        chargeTimer = null;
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
 
-        // score: 0..10 based on charge
-        const gained = Math.max(1, Math.floor(charge / 10));
+        const gained = scoreByCloseness(starScale, targetScale);
         state.score += gained;
         maybeUnlock();
         save();
         render();
-        toast(`松手！+${gained} 心心`);
-        renderCharge();
+
+        toast(gained === 9 ? '完美命中！+9 心心' : `松手！+${gained} 心心`);
+        renderChargeHint(`本次得分：${gained}（再来一次试试更接近目标～）`);
+
+        // next round
+        setTimeout(() => {
+          setTarget();
+          setStar(MIN_STAR);
+        }, 180);
+      };
+
+      const tick = (now) => {
+        const p = Math.min(1, (now - startAt) / CHARGE_MS);
+        // smooth-ish curve
+        const eased = 1 - Math.pow(1 - p, 2.2);
+        setStar(MIN_STAR + (MAX_STAR - MIN_STAR) * eased);
+        if (charging && p < 1) raf = requestAnimationFrame(tick);
+        if (charging && p >= 1) {
+          // auto stop at full charge (forces a score if held too long)
+          stopCharge();
+        }
       };
 
       const startCharge = () => {
         charging = true;
-        charge = 0;
-        renderCharge();
-        chargeTimer = setInterval(() => {
-          if (!charging) return;
-          charge = Math.min(100, charge + 4);
-          renderCharge();
-          if (charge >= 100) {
-            // auto stop at full
-            stopCharge();
-          }
-        }, 60);
+        startAt = performance.now();
+        renderChargeHint();
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(tick);
       };
 
-      // Use pointer events for best mobile compatibility
+      // Pointer events for mobile
       chargeBtn.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         if (charging) return;
@@ -733,12 +823,14 @@
       });
       chargeBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopCharge(); });
       chargeBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopCharge(); });
-      chargeBtn.addEventListener('pointerleave', () => { /* allow leaving without stopping */ });
 
-      // Also prevent double-tap zoom on this control
+      // Also prevent iOS double-tap zoom on this control
       chargeBtn.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
 
-      renderCharge();
+      // init
+      setTarget();
+      setStar(MIN_STAR);
+      renderChargeHint();
     };
 
     const showGate = () => {

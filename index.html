@@ -131,6 +131,19 @@
       background: rgba(0,0,0,0.78); color:#fff; font-size:13px; box-shadow: 0 18px 50px rgba(0,0,0,0.20);
       max-width: calc(100% - 26px); text-align:center; display:none;}
 
+    /* center message for perfect run */
+    .centerMsg{position:fixed; inset:0; display:grid; place-items:center; padding:18px;
+      background: rgba(255,255,255,0.35); backdrop-filter: blur(10px); z-index: 50;}
+    .centerCard{width:min(560px, 100%); border-radius:22px; padding:18px 16px;
+      background: rgba(255,255,255,0.86); border:1px solid rgba(0,0,0,0.06);
+      box-shadow:0 24px 70px rgba(0,0,0,0.12);
+      text-align:center; font-size:18px; line-height:1.8; color: rgba(0,0,0,0.78);
+      background-image: radial-gradient(800px 240px at 30% 20%, rgba(255,205,226,0.55), transparent 60%),
+                        radial-gradient(800px 240px at 75% 35%, rgba(200,233,255,0.55), transparent 60%);
+    }
+    .centerSub{display:block; margin-top:8px; font-size:14px; color: rgba(0,0,0,0.60);}
+    .centerSign{display:block; margin-top:10px; font-size:13px; color: rgba(0,0,0,0.50);}
+
     /* burst effect */
     .spark{
       position:absolute;
@@ -242,6 +255,9 @@
   </div>
 
   <div class="toast" id="toast"></div>
+  <div class="centerMsg" id="centerMsg" style="display:none">
+    <div class="centerCard" id="centerCard"></div>
+  </div>
 
   <script>
     // NOTE: This is a *simple* client-side gate (not real security).
@@ -284,6 +300,27 @@
       clearTimeout(toast._timer);
       toast._timer = setTimeout(() => t.style.display = 'none', 1800);
     };
+
+    const centerMsg = (html, ms = 2200) => {
+      const wrap = $('centerMsg');
+      const card = $('centerCard');
+      if (!wrap || !card) return;
+      card.innerHTML = html;
+      wrap.style.display = 'grid';
+      clearTimeout(centerMsg._timer);
+      centerMsg._timer = setTimeout(() => {
+        wrap.style.display = 'none';
+        card.innerHTML = '';
+      }, ms);
+    };
+    // allow tap to dismiss
+    document.addEventListener('click', (e) => {
+      const wrap = $('centerMsg');
+      if (wrap && wrap.style.display !== 'none') {
+        wrap.style.display = 'none';
+        $('centerCard').innerHTML = '';
+      }
+    }, { capture: true });
 
     const todayKey = () => {
       const d = new Date();
@@ -510,7 +547,12 @@
               maybeUnlock();
               save();
               render();
-              toast('全部击中！额外 +5 ❤ Theo，你真的超厉害～ - Evie');
+              centerMsg(
+                `✨ 全部收集成功！额外 +5 ✨` +
+                `<span class="centerSub">Theo，你真的超厉害～我在这边给你鼓掌到手心发烫。</span>` +
+                `<span class="centerSign">— Evie</span>`,
+                2600
+              );
             }
             hgRun = null;
           }
@@ -548,7 +590,7 @@
       const left = remainingPlays();
       renderHg();
       if (left <= 0) {
-        toast('Theo～这一小时已经玩满 5 次啦，休息一下，下一小时再来 ❤ — Evie');
+        toast('Theo～这一小时已经玩满 5 次啦，休息一下，下一小时再来 ❤ - Evie');
         return;
       }
 

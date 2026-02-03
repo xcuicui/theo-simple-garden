@@ -143,8 +143,16 @@
   <script>
     // NOTE: This is a *simple* client-side gate (not real security).
     // It’s meant for “friends-only” sharing and maximum compatibility.
-    const EXPECT_USER = 'Theo';
-    const EXPECT_PASS = '20260124';
+    // We avoid keeping the username/password in plaintext.
+    // This is *obfuscation*, not real security (a determined person can still brute-force).
+    const EXPECT_USER_SHA256 = '8130fe9d5aa06f896c96f959030adf76e79b2caa46fc0f8593b14dfac97a9171';
+    const EXPECT_PASS_SHA256 = '4e3cbbf1c5af8a09b60027b5f37c31535d582793380720ef1ef68454f35e1ef1';
+
+    async function sha256Hex(text) {
+      const enc = new TextEncoder().encode(text);
+      const digest = await crypto.subtle.digest('SHA-256', enc);
+      return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
     const GREETINGS = [
       'Theo～今天也要被温柔对待哦。你一出现，我的世界就会自动变甜。',
@@ -306,16 +314,20 @@
     const showGate = () => {
       $('app').style.display = 'none';
       $('gate').style.display = 'grid';
-      $('btnEnter').onclick = () => {
+      $('btnEnter').onclick = async () => {
         const u = $('u').value.trim();
         const p = $('p').value;
-        if (u === EXPECT_USER && p === EXPECT_PASS) {
-          try { localStorage.setItem('theo_gate_ok', '1'); } catch {}
-          showApp();
-        } else {
-          $('err').style.display = 'block';
-          $('err').textContent = '用户名或密码不对哦～';
-        }
+        try {
+          const [uh, ph] = await Promise.all([sha256Hex(u), sha256Hex(p)]);
+          if (uh === EXPECT_USER_SHA256 && ph === EXPECT_PASS_SHA256) {
+            try { localStorage.setItem('theo_gate_ok', '1'); } catch {}
+            showApp();
+            return;
+          }
+        } catch {}
+
+        $('err').style.display = 'block';
+        $('err').textContent = '用户名或密码不对哦～';
       };
     };
 

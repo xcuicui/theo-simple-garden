@@ -84,7 +84,13 @@
     .input{margin-top:6px; width:100%; border-radius:14px; border:1px solid rgba(0,0,0,0.10); padding:10px 12px; font-size:14px; outline:none; background: rgba(255,255,255,0.9);}
     .err{margin-top:12px; font-size:13px; color:#b0003a;}
 
-    @media (max-width:760px){.grid{grid-template-columns:1fr;} .stats{grid-template-columns:1fr;} .title{font-size:26px;}}
+    @media (max-width:760px){
+      .grid{grid-template-columns:1fr;}
+      .stats{grid-template-columns:1fr;}
+      .title{font-size:26px;}
+      .btns{flex-direction:column;}
+      .btn{width:100%;}
+    }
   </style>
 </head>
 <body>
@@ -112,6 +118,9 @@
       <div class="gameTitle">小游戏：收集小心心</div>
       <div class="gameDesc">点到心心就 +1。达到 10/30/60 会解锁奖励贴纸～</div>
       <div class="board" id="board"><div class="hint">点「开始收集心心」后，小心心会飘出来</div></div>
+      <div class="btns" style="margin-top:12px">
+        <button class="btn primary" id="btnStart2">开始收集心心</button>
+      </div>
     </div>
 
     <div class="rewards">
@@ -307,6 +316,7 @@
 
       $('btnNew').onclick = pickGreeting;
       $('btnStart').onclick = startMiniGame;
+      $('btnStart2').onclick = startMiniGame;
       $('btnDaily').onclick = dailyBonus;
       $('btnReset').onclick = resetLocal;
     };

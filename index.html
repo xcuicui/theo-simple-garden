@@ -113,8 +113,6 @@
       <div class="btns">
         <button class="btn" id="btnNew">换一句</button>
         <button class="btn" id="btnDaily">今日签到 +7</button>
-        <button class="btn primary" id="btnStart">开始收集心心</button>
-        <button class="btn" id="btnReset">重置本地进度</button>
       </div>
     </div>
 
@@ -339,10 +337,8 @@
       render();
 
       $('btnNew').onclick = pickGreeting;
-      $('btnStart').onclick = startMiniGame;
       $('btnStart2').onclick = startMiniGame;
       $('btnDaily').onclick = dailyBonus;
-      $('btnReset').onclick = resetLocal;
 
       // Mini game 2: press-and-hold charge
       const chargeBtn = $('chargeBtn');

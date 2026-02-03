@@ -60,7 +60,7 @@
       border: 1px dashed rgba(0,0,0,0.12);
     }
     .hint{position:absolute; inset:0; display:grid; place-items:center; font-size:13px; color:rgba(0,0,0,0.45); pointer-events:none;}
-    .heart{position:absolute; bottom:-22px; width:56px; height:56px; border:0; cursor:pointer; background:transparent;
+    .heart{position:absolute; bottom:-22px; width:42px; height:42px; border:0; cursor:pointer; background:transparent;
       animation-name: floatUp; animation-timing-function:ease-in; animation-fill-mode:forwards;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
@@ -82,8 +82,7 @@
     .heart:active::after{ opacity: 0.9; transform: scale(1.02); }
     .heart.hit{ animation: pop 160ms ease-out forwards; }
     @keyframes pop { from { transform: translate(-50%, 0) scale(1); } to { transform: translate(-50%, 0) scale(1.18); } }
-    .heart::before{content:'❤'; font-size:38px; filter: drop-shadow(0 12px 16px rgba(0,0,0,0.12)); color:#ff5aa8; position:absolute; left:50%; top:50%; transform: translate(-50%, -50%);}
-    .heart:nth-child(3n)::before{color:#ff7bbd;} .heart:nth-child(4n)::before{color:#ff4d8f;} .heart:nth-child(5n)::before{color:#ff95c7;}
+    .heart::before{content:'❤'; font-size:30px; filter: drop-shadow(0 10px 14px rgba(0,0,0,0.12)); color: var(--hc, #ff5aa8); position:absolute; left:50%; top:50%; transform: translate(-50%, -50%);}
     @keyframes floatUp{0%{transform: translate(-50%,0) scale(1); opacity:1;} 100%{transform: translate(-50%,-260px) scale(1.08); opacity:0;}}
     .rewards{margin-top:16px;}
     .rewardsTitle{font-weight:900; color:rgba(0,0,0,0.78)}
@@ -118,7 +117,7 @@
       100%{ opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.25); }
     }
 
-    /* “very simple password gate” overlay */
+    /* "very simple password gate" overlay */
     .gate{position:fixed; inset:0; display:grid; place-items:center; background: rgba(255,255,255,0.55); backdrop-filter: blur(10px);}
     .gateCard{width:min(520px, calc(100% - 32px)); border-radius:22px; background: rgba(255,255,255,0.88);
       border:1px solid rgba(0,0,0,0.06); box-shadow:0 24px 70px rgba(0,0,0,0.10); padding:22px;}
@@ -144,7 +143,7 @@
 
     <div class="bubble">
       <div class="bubbleText" id="greet"></div>
-      <div class="sign">— Evie</div>
+      <div class="sign">- Evie</div>
       <div class="btns">
         <button class="btn" id="btnNew">换一句</button>
         <button class="btn" id="btnDaily">今日签到 +7</button>
@@ -167,7 +166,7 @@
       <div style="height:12px"></div>
 
       <div class="gameTitle">小游戏 2：长按充能（松手得分）</div>
-      <div class="gameDesc">按住“充能心心”会变亮，松手就把能量变成分数。更适合手机，不怕双击放大。</div>
+      <div class="gameDesc">按住"充能心心"会变亮，松手就把能量变成分数。更适合手机，不怕双击放大。</div>
       <div class="board" id="chargeBoard">
         <div class="hint" id="chargeHint">按住下面的心心开始充能</div>
       </div>
@@ -187,7 +186,7 @@
   <div class="gate" id="gate" style="display:none">
     <div class="gateCard">
       <div class="gateTitle">Theo 的小站 · 登录</div>
-      <div class="gateSub">这是一个很简单的“密码门”。输入对了就放你进来～</div>
+      <div class="gateSub">这是一个很简单的"密码门"。输入对了就放你进来～</div>
       <label class="label">用户名</label>
       <input class="input" id="u" value="Theo" />
       <label class="label">密码</label>
@@ -196,7 +195,7 @@
       <div class="btns" style="margin-top:14px">
         <button class="btn primary" id="btnEnter">进入小站</button>
       </div>
-      <div class="footer">— Evie</div>
+      <div class="footer">- Evie</div>
     </div>
   </div>
 
@@ -204,7 +203,7 @@
 
   <script>
     // NOTE: This is a *simple* client-side gate (not real security).
-    // It’s meant for “friends-only” sharing and maximum compatibility.
+    // It's meant for "friends-only" sharing and maximum compatibility.
     // We avoid keeping the username/password in plaintext.
     // This is *obfuscation*, not real security (a determined person can still brute-force).
     const EXPECT_USER_SHA256 = '8130fe9d5aa06f896c96f959030adf76e79b2caa46fc0f8593b14dfac97a9171';
@@ -218,10 +217,10 @@
 
     const GREETINGS = [
       'Theo～今天也要被温柔对待哦。你一出现，我的世界就会自动变甜。',
-      'Theo，给你一颗小星星：⭐ 代表“你很棒”。',
+      'Theo，给你一颗小星星：⭐ 代表"你很棒"。',
       'Theo～如果你累了，就把烦恼交给我 10 秒钟，我帮你抱着。',
       'Theo，今天的你像热可可：不吵不闹，但特别暖。',
-      'Theo～我偷偷把好运调成“只对你生效”。',
+      'Theo～我偷偷把好运调成"只对你生效"。',
       'Theo，来个可爱小笑话：我想严肃三秒…失败了，因为一想到你就想笑。',
       'Theo～你不需要一直发光，偶尔当一盏小夜灯也超棒。',
       'Theo，今天也请你对自己甜一点，像对待小朋友那样。',
@@ -232,7 +231,7 @@
     const REWARDS = [
       { id: 'r10', title: '奖励贴纸 · 抱抱券 x1', desc: '可以随时兑换一个抱抱（我先欠着）。', need: 10 },
       { id: 'r30', title: '奖励贴纸 · 热可可券 x1', desc: '今天也要暖暖的，甜甜的。', need: 30 },
-      { id: 'r60', title: '奖励贴纸 · 好心情徽章', desc: '你已经是“认真生活的可爱冠军”。', need: 60 },
+      { id: 'r60', title: '奖励贴纸 · 好心情徽章', desc: '你已经是"认真生活的可爱冠军"。', need: 60 },
     ];
 
     const $ = (id) => document.getElementById(id);
@@ -308,6 +307,27 @@
       $('greet').textContent = pick;
     };
 
+    // avoid overlapping too much by spacing X positions
+    const activeHeartXs = []; // { id, x }
+    const romanticColors = [
+      '#ff4d8f', // rose
+      '#ff77b7', // blush
+      '#ff5aa8', // pink
+      '#c06cff', // lavender
+      '#ff6bd6', // magenta
+      '#ff6f61', // coral
+    ];
+
+    const pickX = () => {
+      const minDist = 10; // percentage points
+      for (let tries = 0; tries < 20; tries++) {
+        const x = Math.random() * 90 + 5;
+        const ok = activeHeartXs.every(h => Math.abs(h.x - x) >= minDist);
+        if (ok) return x;
+      }
+      return Math.random() * 90 + 5;
+    };
+
     const spawnHeart = () => {
       const board = $('board');
       const heart = document.createElement('button');
@@ -315,10 +335,15 @@
       heart.type = 'button';
       heart.setAttribute('aria-label', 'heart');
 
-      const x = Math.random() * 90 + 5;
-      const dur = 2600 + Math.random() * 2200;
+      const x = pickX();
+      const dur = 2700 + Math.random() * 2400;
       heart.style.left = `${x}%`;
       heart.style.animationDuration = `${dur}ms`;
+      heart.style.setProperty('--hc', romanticColors[Math.floor(Math.random() * romanticColors.length)]);
+
+      const id = Math.random().toString(36).slice(2);
+      heart.dataset.hid = id;
+      activeHeartXs.push({ id, x });
 
       // Prevent iOS double-tap zoom / selection quirks
       heart.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
@@ -329,6 +354,8 @@
         const cx = r.left - boardRect.left + r.width / 2;
         const cy = r.top - boardRect.top + r.height / 2;
 
+        const hc = el.style.getPropertyValue('--hc') || '#ff5aa8';
+
         // sparks
         const n = 10;
         for (let i = 0; i < n; i++) {
@@ -336,8 +363,9 @@
           s.className = 'spark';
           s.style.left = `${cx}px`;
           s.style.top = `${cy}px`;
+          s.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.2) 35%, rgba(255,255,255,0) 70%), linear-gradient(135deg, ${hc}, rgba(124,199,255,1))`;
           const ang = (Math.PI * 2 * i) / n + (Math.random() * 0.25);
-          const dist = 48 + Math.random() * 22;
+          const dist = 44 + Math.random() * 20;
           const dx = Math.cos(ang) * dist;
           const dy = Math.sin(ang) * dist;
           s.style.setProperty('--dx', `${dx}px`);
@@ -346,6 +374,11 @@
           board.appendChild(s);
           setTimeout(() => s.remove(), 700);
         }
+      };
+
+      const removeFromActive = () => {
+        const idx = activeHeartXs.findIndex(h => h.id === heart.dataset.hid);
+        if (idx >= 0) activeHeartXs.splice(idx, 1);
       };
 
       let done = false;
@@ -359,7 +392,7 @@
         save();
         render();
         toast('+1 心心');
-        setTimeout(() => heart.remove(), 140);
+        setTimeout(() => { removeFromActive(); heart.remove(); }, 140);
       };
 
       // Use pointerdown for better mobile responsiveness
@@ -373,7 +406,11 @@
       });
 
       board.appendChild(heart);
-      setTimeout(() => { if (heart.isConnected) heart.remove(); }, dur + 200);
+      setTimeout(() => { if (heart.isConnected) { 
+        const idx = activeHeartXs.findIndex(h => h.id === heart.dataset.hid);
+        if (idx >= 0) activeHeartXs.splice(idx, 1);
+        heart.remove();
+      } }, dur + 200);
     };
 
     const startMiniGame = () => {

@@ -119,9 +119,24 @@
     }
 
     .note{margin-top:10px; font-size:12px; color: rgba(0,0,0,0.46); line-height:1.65}
+
+    .rewards{margin-top:14px;}
+    .rewardsTitle{font-weight:950; color:rgba(0,0,0,0.78)}
+    .grid{margin-top:10px; display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px;}
+    .reward{padding:14px; border-radius:18px; border:1px solid rgba(0,0,0,0.06); background: rgba(255,255,255,0.68)}
+    .reward.ok{background: linear-gradient(135deg, rgba(90,167,255,0.22), rgba(255,143,194,0.16)); border-color: rgba(31,102,227,0.18); box-shadow: 0 14px 34px rgba(11,42,120,0.10);}
+    .rewardTop{display:flex; justify-content:space-between; gap:10px; align-items:baseline}
+    .rewardName{font-weight:950; font-size:14px; color:rgba(0,0,0,0.78)}
+    .rewardNeed{font-size:12px; color:rgba(0,0,0,0.55); white-space:nowrap}
+    .rewardDesc{margin-top:8px; font-size:13px; color:rgba(0,0,0,0.60); line-height:1.6}
+
     .toast{position:fixed; left:50%; bottom: 16px; transform: translateX(-50%);
       background: rgba(0,0,0,0.80); color:#fff; padding: 10px 14px; border-radius: 999px; font-size: 13px;
       box-shadow: 0 18px 50px rgba(0,0,0,0.20); display:none; max-width: calc(100% - 24px); text-align:center; z-index:50;}
+
+    @media (max-width: 560px){
+      .grid{grid-template-columns: repeat(1, minmax(0, 1fr));}
+    }
 
     @media (max-width: 560px){
       .wrap{padding: 14px;}
@@ -159,6 +174,12 @@
       </div>
       <div class="calWeek" id="calWeek"></div>
       <div class="calGrid" id="calGrid"></div>
+
+      <div class="rewards">
+        <div class="rewardsTitle">奖励贴纸</div>
+        <div class="grid" id="rewards"></div>
+        <div class="note">签得越多，券券越多～（解锁后就当作你的小收藏）</div>
+      </div>
     </div>
   </div>
 
@@ -232,12 +253,40 @@
     let viewM = 0;
     let set = loadSet();
 
+    const REWARDS = [
+      { id: 'hug', name: '抱抱券', need: 1, desc: '可兑换一个抱抱（不限时）' },
+      { id: 'kiss', name: '亲亲券', need: 3, desc: '可兑换一个亲亲（害羞也算）' },
+      { id: 'coffee', name: '咖啡券', need: 7, desc: '可兑换一杯咖啡/奶茶（想喝就喝）' },
+      { id: 'walk', name: '散步券', need: 14, desc: '可兑换一次散步（一起慢慢走）' }
+    ];
+
+    function renderRewards(){
+      const box = $('rewards');
+      if (!box) return;
+      const total = set.size;
+      box.innerHTML = '';
+      for (const r of REWARDS) {
+        const ok = total >= r.need;
+        const div = document.createElement('div');
+        div.className = 'reward' + (ok ? ' ok' : '');
+        div.innerHTML = `
+          <div class="rewardTop">
+            <div class="rewardName">${r.name}</div>
+            <div class="rewardNeed">${ok ? '已解锁' : `需要 ${r.need} 天`}</div>
+          </div>
+          <div class="rewardDesc">${r.desc}</div>
+        `;
+        box.appendChild(div);
+      }
+    }
+
     function renderStats(){
       $('total').textContent = String(set.size);
       $('streak').textContent = String(computeStreak(set));
       $('todayState').textContent = set.has(todayStr()) ? '已签到' : '未签到';
       $('checkinBtn').textContent = set.has(todayStr()) ? '今天已签到' : '今天签到';
       $('checkinBtn').disabled = false;
+      renderRewards();
     }
 
     function renderCalendar(){

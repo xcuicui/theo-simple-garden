@@ -576,6 +576,29 @@
       if (hgMetaEl()) hgMetaEl().textContent = `本小时剩余 ${remainingPlays()} 次`;
     };
 
+    // Charge-game hourly play limit (game 2)
+    const chargePlaysKey = () => 'theo_charge_plays';
+    const getRecentChargePlays = () => {
+      const now = Date.now();
+      try {
+        const arr = JSON.parse(localStorage.getItem(chargePlaysKey()) || '[]');
+        const cleaned = Array.isArray(arr) ? arr.filter(t => typeof t === 'number' && now - t < 60*60*1000) : [];
+        localStorage.setItem(chargePlaysKey(), JSON.stringify(cleaned));
+        return cleaned;
+      } catch {
+        return [];
+      }
+    };
+    const remainingChargePlays = () => {
+      const used = getRecentChargePlays().length;
+      return Math.max(0, 5 - used);
+    };
+    const recordChargePlay = () => {
+      const arr = getRecentChargePlays();
+      arr.push(Date.now());
+      try { localStorage.setItem(chargePlaysKey(), JSON.stringify(arr)); } catch {}
+    };
+
     const pickX = () => {
       const minDist = 12; // percentage points
       for (let tries = 0; tries < 24; tries++) {
@@ -903,9 +926,10 @@
 
       const renderChargeHint = (extra = '') => {
         if (!chargeHint) return;
+        const left = remainingChargePlays();
         chargeHint.textContent = charging
           ? '充能中…松手结算（0～9 分）'
-          : (extra || '按住开始充能，松手结算（0～9 分）');
+          : (extra || `按住开始充能，松手结算（0～9 分） · 本小时剩余 ${left} 次`);
       };
 
       const scoreByCloseness = (s, t) => {
@@ -921,14 +945,25 @@
         if (raf) cancelAnimationFrame(raf);
         raf = null;
 
+        // consume one play
+        recordChargePlay();
+
         const gained = scoreByCloseness(starScale, targetScale);
         state.score += gained;
         maybeUnlock();
         save();
         render();
 
-        toast(gained === 9 ? '完美命中！+9 心心' : `松手！+${gained} 心心`);
-        renderChargeHint(`本次得分：${gained}（再来一次试试更接近目标～）`);
+        const msg =
+          gained >= 9 ? '完美命中！你也太会了吧 ✨ +9 心心' :
+          gained >= 7 ? `好准！+${gained} 心心` :
+          gained >= 5 ? `不错不错～ +${gained} 心心` :
+          gained >= 3 ? `差一点点更像啦～ +${gained} 心心` :
+          gained >= 1 ? `没关系，再来一次就更准～ +${gained} 心心` :
+          '这次没对上也没事～抱抱，再试试';
+
+        toast(msg);
+        renderChargeHint(`本次得分：${gained} · 本小时剩余 ${remainingChargePlays()} 次`);
 
         // next round
         setTimeout(() => {
@@ -950,6 +985,11 @@
       };
 
       const startCharge = () => {
+        if (remainingChargePlays() <= 0) {
+          toast('这一小时已经玩满 5 次啦～等一会再来');
+          renderChargeHint();
+          return;
+        }
         charging = true;
         startAt = performance.now();
         renderChargeHint();

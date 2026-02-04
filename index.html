@@ -320,11 +320,15 @@
     </div>
 
     <div class="rewards">
-      <div class="rewardsTitle">奖励贴纸</div>
+      <div class="rewardsTitle">抽奖小机</div>
+      <div class="btns" style="margin-top:10px">
+        <button class="btn primary" id="drawBtn">抽一次（-10 心心）</button>
+      </div>
+      <div class="sub" style="margin-top:10px">抽到的券券会收进你的“小口袋”。</div>
       <div class="grid" id="rewards"></div>
     </div>
 
-    <div class="footer">提示：分数与贴纸只保存在本设备本地（localStorage）。</div>
+    <div class="footer">提示：分数与抽到的券券只保存在本设备本地（localStorage）。</div>
   </div>
 
   <div class="gate" id="gate" style="display:none">
@@ -375,12 +379,14 @@
       'Theo，抱抱券已送达：不限次数，不限时段。'
     ];
 
-    const REWARDS = [
-      { id: 'hug', title: '抱抱券', desc: '可兑换一个抱抱（不限时）', need: 10 },
-      { id: 'kiss', title: '亲亲券', desc: '可兑换一个亲亲（害羞也算）', need: 25 },
-      { id: 'coffee', title: '咖啡券', desc: '可兑换一杯咖啡/奶茶（想喝就喝）', need: 50 },
-      { id: 'walk', title: '散步券', desc: '可兑换一次散步（一起慢慢走）', need: 80 },
+    const PRIZES = [
+      { id: 'hug', title: '抱抱券', desc: '可兑换一个抱抱（不限时）' },
+      { id: 'kiss', title: '亲亲券', desc: '可兑换一个亲亲（害羞也算）' },
+      { id: 'coffee', title: '咖啡券', desc: '可兑换一杯咖啡/奶茶（想喝就喝）' },
+      { id: 'walk', title: '散步券', desc: '可兑换一次散步（一起慢慢走）' },
     ];
+
+    const DRAW_COST = 10;
 
     const $ = (id) => document.getElementById(id);
     const toast = (msg) => {
@@ -443,14 +449,14 @@
 
     const state = {
       score: 0,
-      unlocked: {},
+      bag: {}, // prizeId -> count
       dailyBonusTaken: false,
     };
 
     const load = () => {
       try {
         state.score = Number(localStorage.getItem('theo_score') || '0') || 0;
-        state.unlocked = JSON.parse(localStorage.getItem('theo_unlocked') || '{}') || {};
+        state.bag = JSON.parse(localStorage.getItem('theo_bag') || '{}') || {};
         state.dailyBonusTaken = (localStorage.getItem('theo_daily_bonus_day') === todayKey());
       } catch {}
     };
@@ -458,7 +464,7 @@
     const save = () => {
       try {
         localStorage.setItem('theo_score', String(state.score));
-        localStorage.setItem('theo_unlocked', JSON.stringify(state.unlocked));
+        localStorage.setItem('theo_bag', JSON.stringify(state.bag));
       } catch {}
     };
 
@@ -468,29 +474,39 @@
 
       const grid = $('rewards');
       grid.innerHTML = '';
-      for (const r of REWARDS) {
-        const ok = !!state.unlocked[r.id];
+
+      const total = Object.values(state.bag || {}).reduce((a,b)=>a+(Number(b)||0), 0);
+      if (!total) {
+        const empty = document.createElement('div');
+        empty.className = 'reward';
+        empty.innerHTML = `
+          <div class="rewardTop">
+            <div class="rewardName">小口袋空空</div>
+            <div class="rewardNeed">先抽一次吧～</div>
+          </div>
+          <div class="rewardDesc">每抽一次消耗 ${DRAW_COST} 心心。</div>
+        `;
+        grid.appendChild(empty);
+        return;
+      }
+
+      for (const p of PRIZES) {
+        const cnt = Number((state.bag || {})[p.id] || 0);
+        if (!cnt) continue;
         const div = document.createElement('div');
-        div.className = 'reward' + (ok ? ' ok' : '');
+        div.className = 'reward ok';
         div.innerHTML = `
           <div class="rewardTop">
-            <div class="rewardName">${r.title}</div>
-            <div class="rewardNeed">需要 ${r.need} 心心</div>
+            <div class="rewardName">${p.title}</div>
+            <div class="rewardNeed">x ${cnt}</div>
           </div>
-          <div class="rewardDesc">${ok ? r.desc : '还没解锁哦～继续收集心心吧！'}</div>
+          <div class="rewardDesc">${p.desc}</div>
         `;
         grid.appendChild(div);
       }
     };
 
-    const maybeUnlock = () => {
-      for (const r of REWARDS) {
-        if (state.score >= r.need && !state.unlocked[r.id]) {
-          state.unlocked[r.id] = true;
-          toast('解锁：' + r.title);
-        }
-      }
-    };
+    const maybeUnlock = () => {};
 
     const pickGreeting = () => {
       const pick = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
@@ -800,7 +816,7 @@
       try {
         localStorage.removeItem('theo_gate_ok');
         localStorage.removeItem('theo_score');
-        localStorage.removeItem('theo_unlocked');
+        localStorage.removeItem('theo_bag');
         localStorage.removeItem('theo_daily_bonus_day');
         localStorage.removeItem('theo_heartgame_plays');
         localStorage.removeItem(`${todayKey()}_heartgame_points`);
@@ -838,6 +854,18 @@
       $('btnStart2').onclick = startMiniGame;
       $('btnDaily').onclick = dailyBonus;
       $('btnReset') && ($('btnReset').onclick = resetAll);
+      $('drawBtn') && ($('drawBtn').onclick = () => {
+        if (state.score < DRAW_COST) {
+          toast(`心心不够啦～需要 ${DRAW_COST} 心心`);
+          return;
+        }
+        state.score -= DRAW_COST;
+        const p = PRIZES[Math.floor(Math.random() * PRIZES.length)];
+        state.bag[p.id] = (Number(state.bag[p.id] || 0) + 1);
+        save();
+        render();
+        centerMsg(`抽到了：<b>${p.title}</b> ✨<span class="centerSub">${p.desc}</span>`, { buttonText: '收进小口袋(๑•̀ㅂ•́)و' });
+      });
 
       // refresh remaining plays every ~10s (hour window)
       setInterval(renderHg, 10000);
